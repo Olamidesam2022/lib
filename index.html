@@ -1,0 +1,800 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LIBRVM — Personal Book Collection</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400&family=DM+Sans:wght@300;400;500&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ivory: #f5f0e8;
+    --parchment: #ede6d6;
+    --warm-white: #faf8f4;
+    --charcoal: #1c1c1e;
+    --graphite: #3a3a3c;
+    --smoke: #6e6e73;
+    --dusty: #a8a29e;
+    --accent: #b5451b;
+    --accent-light: #e8c4b8;
+    --gold: #c9a84c;
+    --border: #d6cec2;
+    --shadow: rgba(28,28,30,0.12);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--ivory);
+    color: var(--charcoal);
+    min-height: 100vh;
+  }
+
+  /* HEADER */
+  header {
+    background: var(--charcoal);
+    padding: 0 48px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 72px;
+    border-bottom: 3px solid var(--accent);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+
+  .logo {
+    font-family: 'Playfair Display', serif;
+    font-size: 28px;
+    font-weight: 900;
+    color: var(--ivory);
+    letter-spacing: 6px;
+    text-transform: uppercase;
+  }
+  .logo span { color: var(--accent); }
+
+  .header-meta {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    color: var(--dusty);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+  }
+
+  /* MAIN LAYOUT */
+  .container { max-width: 1280px; margin: 0 auto; padding: 0 48px; }
+
+  .hero {
+    padding: 64px 0 32px;
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 48px;
+  }
+
+  .hero-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 64px;
+    font-weight: 900;
+    line-height: 1;
+    color: var(--charcoal);
+  }
+  .hero-title em {
+    font-style: italic;
+    color: var(--accent);
+  }
+
+  .hero-right { text-align: right; }
+  .book-count {
+    font-family: 'DM Mono', monospace;
+    font-size: 48px;
+    font-weight: 500;
+    color: var(--charcoal);
+    line-height: 1;
+  }
+  .book-count-label {
+    font-size: 12px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--smoke);
+    margin-top: 4px;
+  }
+
+  /* CONTROLS */
+  .controls {
+    display: flex;
+    gap: 16px;
+    margin-bottom: 40px;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+
+  .search-wrap {
+    position: relative;
+    flex: 1;
+    min-width: 240px;
+  }
+  .search-wrap svg {
+    position: absolute;
+    left: 16px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--smoke);
+  }
+  .search-input {
+    width: 100%;
+    padding: 14px 16px 14px 46px;
+    border: 1.5px solid var(--border);
+    border-radius: 4px;
+    background: var(--warm-white);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    color: var(--charcoal);
+    transition: border-color 0.2s;
+    outline: none;
+  }
+  .search-input:focus { border-color: var(--accent); }
+  .search-input::placeholder { color: var(--dusty); }
+
+  .filter-select {
+    padding: 14px 20px;
+    border: 1.5px solid var(--border);
+    border-radius: 4px;
+    background: var(--warm-white);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    color: var(--graphite);
+    cursor: pointer;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  .filter-select:focus { border-color: var(--accent); }
+
+  .btn-add {
+    padding: 14px 28px;
+    background: var(--accent);
+    color: white;
+    border: none;
+    border-radius: 4px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+    letter-spacing: 0.5px;
+    cursor: pointer;
+    transition: background 0.2s, transform 0.1s;
+    white-space: nowrap;
+  }
+  .btn-add:hover { background: #9a3a16; }
+  .btn-add:active { transform: scale(0.98); }
+
+  /* BOOKS GRID */
+  .books-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 2px;
+    margin-bottom: 80px;
+  }
+
+  .book-card {
+    background: var(--warm-white);
+    border: 1px solid var(--border);
+    padding: 32px 28px 24px;
+    position: relative;
+    transition: transform 0.2s, box-shadow 0.2s;
+    animation: fadeUp 0.4s ease both;
+  }
+  .book-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 16px 40px var(--shadow);
+    z-index: 2;
+  }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(16px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .book-genre-tag {
+    font-family: 'DM Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 12px;
+    display: block;
+  }
+
+  .book-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 22px;
+    font-weight: 700;
+    line-height: 1.25;
+    color: var(--charcoal);
+    margin-bottom: 8px;
+  }
+
+  .book-author {
+    font-size: 13px;
+    color: var(--smoke);
+    margin-bottom: 16px;
+    font-style: italic;
+  }
+
+  .book-meta {
+    display: flex;
+    gap: 16px;
+    margin-bottom: 20px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .meta-item {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    color: var(--smoke);
+  }
+  .meta-item strong {
+    display: block;
+    color: var(--charcoal);
+    font-size: 13px;
+    font-weight: 500;
+    margin-bottom: 2px;
+    font-family: 'DM Sans', sans-serif;
+  }
+
+  .book-rating {
+    display: flex;
+    gap: 3px;
+    margin-bottom: 8px;
+  }
+  .star { color: var(--gold); font-size: 14px; }
+  .star.empty { color: var(--border); }
+
+  .book-notes {
+    font-size: 13px;
+    color: var(--graphite);
+    line-height: 1.6;
+    font-style: italic;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .book-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 20px;
+  }
+
+  .btn-edit, .btn-delete {
+    flex: 1;
+    padding: 10px;
+    border: 1.5px solid var(--border);
+    border-radius: 3px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 12px;
+    font-weight: 500;
+    letter-spacing: 0.5px;
+    cursor: pointer;
+    transition: all 0.15s;
+    text-transform: uppercase;
+  }
+  .btn-edit { background: transparent; color: var(--graphite); }
+  .btn-edit:hover { background: var(--charcoal); color: var(--ivory); border-color: var(--charcoal); }
+  .btn-delete { background: transparent; color: var(--smoke); }
+  .btn-delete:hover { background: var(--accent); color: white; border-color: var(--accent); }
+
+  .read-badge {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: var(--gold);
+  }
+  .read-badge.unread { background: var(--border); }
+
+  /* EMPTY STATE */
+  .empty-state {
+    grid-column: 1 / -1;
+    padding: 80px;
+    text-align: center;
+  }
+  .empty-state .big-text {
+    font-family: 'Playfair Display', serif;
+    font-size: 80px;
+    opacity: 0.08;
+    line-height: 1;
+    margin-bottom: 16px;
+  }
+  .empty-state p {
+    color: var(--smoke);
+    font-size: 15px;
+  }
+
+  /* MODAL */
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(28,28,30,0.7);
+    z-index: 200;
+    align-items: center;
+    justify-content: center;
+    backdrop-filter: blur(4px);
+  }
+  .modal-overlay.open { display: flex; }
+
+  .modal {
+    background: var(--warm-white);
+    width: 100%;
+    max-width: 560px;
+    max-height: 90vh;
+    overflow-y: auto;
+    border-top: 4px solid var(--accent);
+    animation: slideDown 0.3s ease;
+  }
+
+  @keyframes slideDown {
+    from { opacity: 0; transform: translateY(-20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .modal-header {
+    padding: 32px 36px 0;
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+  }
+
+  .modal-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 28px;
+    font-weight: 700;
+  }
+
+  .modal-close {
+    background: none;
+    border: none;
+    font-size: 24px;
+    cursor: pointer;
+    color: var(--smoke);
+    line-height: 1;
+    padding: 4px;
+  }
+  .modal-close:hover { color: var(--charcoal); }
+
+  .modal-body { padding: 28px 36px 36px; }
+
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .form-group { margin-bottom: 20px; }
+
+  .form-label {
+    display: block;
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--smoke);
+    margin-bottom: 8px;
+  }
+
+  .form-control {
+    width: 100%;
+    padding: 12px 16px;
+    border: 1.5px solid var(--border);
+    border-radius: 3px;
+    background: var(--ivory);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    color: var(--charcoal);
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  .form-control:focus { border-color: var(--accent); }
+
+  textarea.form-control { resize: vertical; min-height: 80px; }
+
+  .star-picker { display: flex; gap: 6px; cursor: pointer; }
+  .star-pick { font-size: 24px; color: var(--border); transition: color 0.1s; }
+  .star-pick.active { color: var(--gold); }
+
+  .form-check {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+  }
+  .form-check input { width: 18px; height: 18px; accent-color: var(--accent); cursor: pointer; }
+  .form-check span { font-size: 14px; color: var(--graphite); }
+
+  .modal-footer {
+    display: flex;
+    gap: 12px;
+    justify-content: flex-end;
+    padding-top: 8px;
+  }
+
+  .btn-cancel {
+    padding: 12px 24px;
+    background: transparent;
+    border: 1.5px solid var(--border);
+    border-radius: 3px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    cursor: pointer;
+    color: var(--smoke);
+    transition: all 0.15s;
+  }
+  .btn-cancel:hover { border-color: var(--graphite); color: var(--charcoal); }
+
+  .btn-save {
+    padding: 12px 32px;
+    background: var(--accent);
+    border: none;
+    border-radius: 3px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+    color: white;
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+  .btn-save:hover { background: #9a3a16; }
+
+  /* TOAST */
+  .toast {
+    position: fixed;
+    bottom: 32px;
+    right: 32px;
+    background: var(--charcoal);
+    color: var(--ivory);
+    padding: 14px 24px;
+    border-left: 4px solid var(--accent);
+    font-size: 14px;
+    z-index: 999;
+    transform: translateY(80px);
+    opacity: 0;
+    transition: all 0.3s ease;
+  }
+  .toast.show { transform: translateY(0); opacity: 1; }
+
+  /* DELETE CONFIRM */
+  .confirm-dialog {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(28,28,30,0.7);
+    z-index: 300;
+    align-items: center;
+    justify-content: center;
+  }
+  .confirm-dialog.open { display: flex; }
+  .confirm-box {
+    background: var(--warm-white);
+    padding: 40px;
+    max-width: 400px;
+    width: 90%;
+    border-top: 4px solid var(--accent);
+    text-align: center;
+  }
+  .confirm-box p {
+    font-family: 'Playfair Display', serif;
+    font-size: 20px;
+    margin-bottom: 8px;
+  }
+  .confirm-box small { color: var(--smoke); font-size: 13px; }
+  .confirm-actions { display: flex; gap: 12px; margin-top: 28px; justify-content: center; }
+
+  @media (max-width: 768px) {
+    header { padding: 0 24px; }
+    .container { padding: 0 24px; }
+    .hero-title { font-size: 40px; }
+    .books-grid { grid-template-columns: 1fr; }
+    .form-row { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">LIB<span>R</span>VM</div>
+  <div class="header-meta">Personal Collection</div>
+</header>
+
+<div class="container">
+  <div class="hero">
+    <h1 class="hero-title">Your<br><em>Library</em></h1>
+    <div class="hero-right">
+      <div class="book-count" id="bookCount">0</div>
+      <div class="book-count-label">Volumes</div>
+    </div>
+  </div>
+
+  <div class="controls">
+    <div class="search-wrap">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+      <input class="search-input" id="searchInput" type="text" aria-label="Search books" placeholder="Search by title, author, or genre...">
+    </div>
+    <select class="filter-select" id="filterGenre">
+      <option value="">All Genres</option>
+      <option>Fiction</option>
+      <option>Non-Fiction</option>
+      <option>Mystery</option>
+      <option>Science Fiction</option>
+      <option>Biography</option>
+      <option>History</option>
+      <option>Philosophy</option>
+      <option>Poetry</option>
+    </select>
+    <select class="filter-select" id="filterStatus">
+      <option value="">All Status</option>
+      <option value="read">Read</option>
+      <option value="unread">Unread</option>
+    </select>
+    <button class="btn-add" onclick="openModal()">+ Add Book</button>
+  </div>
+
+  <div class="books-grid" id="booksGrid"></div>
+</div>
+
+<!-- ADD/EDIT MODAL -->
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal">
+    <div class="modal-header">
+      <h2 class="modal-title" id="modalTitle">Add Book</h2>
+      <button class="modal-close" onclick="closeModal()">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Title *</label>
+          <input class="form-control" id="fTitle" placeholder="Book title">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Author *</label>
+          <input class="form-control" id="fAuthor" placeholder="Author name">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Genre</label>
+          <select class="form-control" id="fGenre">
+            <option value="">Select genre</option>
+            <option>Fiction</option>
+            <option>Non-Fiction</option>
+            <option>Mystery</option>
+            <option>Science Fiction</option>
+            <option>Biography</option>
+            <option>History</option>
+            <option>Philosophy</option>
+            <option>Poetry</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Year</label>
+          <input class="form-control" id="fYear" type="number" min="0" placeholder="Publication year">
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Rating</label>
+        <div class="star-picker" id="starPicker">
+          <span class="star-pick" data-val="1">★</span>
+          <span class="star-pick" data-val="2">★</span>
+          <span class="star-pick" data-val="3">★</span>
+          <span class="star-pick" data-val="4">★</span>
+          <span class="star-pick" data-val="5">★</span>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Notes</label>
+        <textarea class="form-control" id="fNotes" placeholder="Your thoughts, quotes, impressions..."></textarea>
+      </div>
+      <div class="form-group">
+        <label class="form-check">
+          <input type="checkbox" id="fRead">
+          <span>I have read this book</span>
+        </label>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-cancel" onclick="closeModal()">Cancel</button>
+        <button class="btn-save" onclick="saveBook()">Save Book</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- DELETE CONFIRM -->
+<div class="confirm-dialog" id="confirmDialog">
+  <div class="confirm-box">
+    <p>Remove this book?</p>
+    <small>This action cannot be undone.</small>
+    <div class="confirm-actions">
+      <button class="btn-cancel" onclick="closeConfirm()">Keep It</button>
+      <button class="btn-save" id="confirmYes">Remove</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+  let books = [
+    { id: 1, title: "Kafka on the Shore", author: "Haruki Murakami", genre: "Fiction", year: 2002, rating: 5, notes: "A surreal masterpiece about fate, memory, and the unconscious.", read: true },
+    { id: 2, title: "Sapiens", author: "Yuval Noah Harari", genre: "History", year: 2011, rating: 4, notes: "A sweeping narrative of humanity's journey from foragers to gods.", read: true },
+    { id: 3, title: "The Stranger", author: "Albert Camus", genre: "Philosophy", year: 1942, rating: 5, notes: "Existential clarity distilled into 100 pages.", read: true },
+    { id: 4, title: "Neuromancer", author: "William Gibson", genre: "Science Fiction", year: 1984, rating: 4, notes: "The novel that coined 'cyberspace'. Dense, electric prose.", read: false },
+  ];
+
+  let nextId = 5;
+  let editingId = null;
+  let currentRating = 0;
+  let deleteTargetId = null;
+
+  // Star picker
+  const stars = document.querySelectorAll('.star-pick');
+  stars.forEach(s => {
+    s.addEventListener('click', () => {
+      currentRating = parseInt(s.dataset.val);
+      updateStars();
+    });
+    s.addEventListener('mouseenter', () => {
+      const val = parseInt(s.dataset.val);
+      stars.forEach((st, i) => st.classList.toggle('active', i < val));
+    });
+  });
+  document.getElementById('starPicker').addEventListener('mouseleave', updateStars);
+
+  function updateStars() {
+    stars.forEach((s, i) => s.classList.toggle('active', i < currentRating));
+  }
+
+  function render() {
+    const q = document.getElementById('searchInput').value.toLowerCase();
+    const genre = document.getElementById('filterGenre').value;
+    const status = document.getElementById('filterStatus').value;
+
+    let filtered = books.filter(b => {
+      const matchQ = !q || b.title.toLowerCase().includes(q) || b.author.toLowerCase().includes(q) || (b.genre||'').toLowerCase().includes(q);
+      const matchG = !genre || b.genre === genre;
+      const matchS = !status || (status === 'read' ? b.read : !b.read);
+      return matchQ && matchG && matchS;
+    });
+
+    const grid = document.getElementById('booksGrid');
+    document.getElementById('bookCount').textContent = books.length;
+
+    if (!filtered.length) {
+      grid.innerHTML = `<div class="empty-state"><div class="big-text">📚</div><p>No books found. Try a different search or add a new one.</p></div>`;
+      return;
+    }
+
+    grid.innerHTML = filtered.map((b, i) => `
+      <div class="book-card" style="animation-delay:${i * 60}ms">
+        <div class="read-badge ${b.read ? '' : 'unread'}" title="${b.read ? 'Read' : 'Unread'}"></div>
+        <span class="book-genre-tag">${b.genre || 'Uncategorised'}</span>
+        <div class="book-title">${b.title}</div>
+        <div class="book-author">by ${b.author}</div>
+        <div class="book-meta">
+          <div class="meta-item"><strong>${b.year || '—'}</strong>Year</div>
+          <div class="meta-item"><strong>${b.read ? 'Read' : 'Unread'}</strong>Status</div>
+        </div>
+        <div class="book-rating">${renderStars(b.rating)}</div>
+        ${b.notes ? `<div class="book-notes">${b.notes}</div>` : ''}
+        <div class="book-actions">
+          <button class="btn-edit" onclick="openEdit(${b.id})">Edit</button>
+          <button class="btn-delete" onclick="askDelete(${b.id})">Remove</button>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  function renderStars(r) {
+    return [1,2,3,4,5].map(i => `<span class="star ${i <= r ? '' : 'empty'}">★</span>`).join('');
+  }
+
+  function openModal(id = null) {
+    editingId = id;
+    currentRating = 0;
+    const modal = document.getElementById('modalOverlay');
+    const title = document.getElementById('modalTitle');
+
+    if (id) {
+      const b = books.find(x => x.id === id);
+      title.textContent = 'Edit Book';
+      document.getElementById('fTitle').value = b.title;
+      document.getElementById('fAuthor').value = b.author;
+      document.getElementById('fGenre').value = b.genre || '';
+      document.getElementById('fYear').value = b.year || '';
+      document.getElementById('fNotes').value = b.notes || '';
+      document.getElementById('fRead').checked = b.read;
+      currentRating = b.rating || 0;
+    } else {
+      title.textContent = 'Add Book';
+      ['fTitle','fAuthor','fYear','fNotes'].forEach(id => document.getElementById(id).value = '');
+      document.getElementById('fGenre').value = '';
+      document.getElementById('fRead').checked = false;
+    }
+
+    updateStars();
+    modal.classList.add('open');
+    document.getElementById('fTitle').focus();
+  }
+
+  function openEdit(id) { openModal(id); }
+
+  function closeModal() {
+    document.getElementById('modalOverlay').classList.remove('open');
+    editingId = null;
+  }
+
+  function saveBook() {
+    const title = document.getElementById('fTitle').value.trim();
+    const author = document.getElementById('fAuthor').value.trim();
+    if (!title || !author) { showToast('Title and author are required.'); return; }
+
+    const data = {
+      title,
+      author,
+      genre: document.getElementById('fGenre').value,
+      year: parseInt(document.getElementById('fYear').value) || null,
+      rating: currentRating,
+      notes: document.getElementById('fNotes').value.trim(),
+      read: document.getElementById('fRead').checked,
+    };
+
+    if (editingId) {
+      const idx = books.findIndex(b => b.id === editingId);
+      books[idx] = { ...books[idx], ...data };
+      showToast('Book updated.');
+    } else {
+      books.unshift({ id: nextId++, ...data });
+      showToast('Book added to your library.');
+    }
+
+    closeModal();
+    render();
+  }
+
+  function askDelete(id) {
+    deleteTargetId = id;
+    document.getElementById('confirmDialog').classList.add('open');
+    document.getElementById('confirmYes').onclick = () => {
+      books = books.filter(b => b.id !== deleteTargetId);
+      closeConfirm();
+      render();
+      showToast('Book removed.');
+    };
+  }
+
+  function closeConfirm() {
+    document.getElementById('confirmDialog').classList.remove('open');
+    deleteTargetId = null;
+  }
+
+  function showToast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 3000);
+  }
+
+  // Live search/filter
+  ['searchInput','filterGenre','filterStatus'].forEach(id => {
+    document.getElementById(id).addEventListener('input', render);
+    document.getElementById(id).addEventListener('change', render);
+  });
+
+  // Close modal on overlay click
+  document.getElementById('modalOverlay').addEventListener('click', e => {
+    if (e.target === e.currentTarget) closeModal();
+  });
+
+  render();
+</script>
+</body>
+</html>
